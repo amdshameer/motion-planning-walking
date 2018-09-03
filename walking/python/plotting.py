@@ -66,7 +66,7 @@ def subsample(feet, model, states, controls, current_foots, time_sim, olddt, new
    #return subsampled CoPs and states
    return [st, cop, tms, tm, constraints]
 
-def generate_trajectories(state, current_foots, h_step, dt, save=True):
+def generate_trajectories(state, current_foots, h_step, dt, save=True, vel_accl=False):
    """      
       generate foot trajectories (x, y, z, theta - doubledots)
       for tracking with whole body controller
@@ -89,48 +89,96 @@ def generate_trajectories(state, current_foots, h_step, dt, save=True):
    time_z     = np.linspace(0, ss/2, (ss/2)/dt)
    pzero      = np.poly1d([0])
 
-   #first step handling
-   #build polynomials
-   pxdd  = np.poly1d([(-12.0/(ss**3))*(x[1] - x[0]), (6.0/(ss**2))*(x[1] - x[0])])
-   #y case
-   pydd  = np.poly1d([(-12.0/(ss**3))*(y[1] - y[1]), (6.0/(ss**2))*(y[1] - y[1])])
-   #theta case
-   ptdd  = np.poly1d([(-12.0/(ss**3))*(theta[1] - theta[0]), (6.0/(ss**2))*(theta[1] - theta[0])])
-   #z case
-   pzdd1 = np.poly1d([(-12.0/((ss/2)**3))*(h_step - 0.0), (6.0/((ss/2)**2))*(h_step - 0.0)])
-   pzdd2 = np.poly1d([(-12.0/((ss/2)**3))*(0.0 - h_step), (6.0/((ss/2)**2))*(0.0 - h_step)])
-
-   #evaluate polynomials
-   pyx     = np.hstack((pxdd(time_nzero), pzero(time_zero))) 
-   pyy     = np.hstack((pydd(time_nzero), pzero(time_zero)))
-   pytheta = np.hstack((ptdd(time_nzero), pzero(time_zero)))
-   pyz     = np.hstack((pzdd1(time_z), pzdd2(time_z), pzero(time_zero)))
-   
-   for idx in xrange(x.shape[0]-2):
+   use_vel = vel_accl
+   if(use_vel == True):
+      #first step handling
       #build polynomials
-      pxdd    = np.poly1d([(-12.0/(ss**3))*(x[idx+2] - x[idx]), (6.0/(ss**2))*(x[idx+2] - x[idx])])
+      pxdd_temp  = np.poly1d([(-12.0/(ss**3))*(x[1] - x[0]), (6.0/(ss**2))*(x[1] - x[0])])
+      pxdd = np.polyint(pxdd_temp)
       #y case
-      pydd    = np.poly1d([(-12.0/(ss**3))*(y[idx+2] - y[idx]), (6.0/(ss**2))*(y[idx+2] - y[idx])])
+      pydd_temp  = np.poly1d([(-12.0/(ss**3))*(y[1] - y[1]), (6.0/(ss**2))*(y[1] - y[1])])
+      pydd = np.polyint(pydd_temp)
       #theta case
-      ptdd    = np.poly1d([(-12.0/(ss**3))*(theta[idx+2] - theta[idx]), (6.0/(ss**2))*(theta[idx+2] - theta[idx])])
+      ptdd_temp  = np.poly1d([(-12.0/(ss**3))*(theta[1] - theta[0]), (6.0/(ss**2))*(theta[1] - theta[0])])
+      ptdd = np.polyint(ptdd_temp)
       #z case
-      pzdd1   = np.poly1d([(-12.0/((ss/2)**3))*(h_step - 0.0), (6.0/((ss/2)**2))*(h_step - 0.0)])
-      pzdd2   = np.poly1d([(-12.0/((ss/2)**3))*(0.0 - h_step), (6.0/((ss/2)**2))*(0.0 - h_step)])
+      pzdd1_temp = np.poly1d([(-12.0/((ss/2)**3))*(h_step - 0.0), (6.0/((ss/2)**2))*(h_step - 0.0)])
+      pzdd2_temp = np.poly1d([(-12.0/((ss/2)**3))*(0.0 - h_step), (6.0/((ss/2)**2))*(0.0 - h_step)])
+      pzdd1 = np.polyint(pzdd1_temp)
+      pzdd2 = np.polyint(pzdd2_temp)
+
       #evaluate polynomials
-      pyx     = np.vstack((pyx, np.hstack((pxdd(time_nzero), pzero(time_zero))))) 
-      pyy     = np.vstack((pyy, np.hstack((pydd(time_nzero), pzero(time_zero)))))
-      pytheta = np.vstack((pytheta, np.hstack((ptdd(time_nzero), pzero(time_zero)))))
-      pyz     = np.vstack((pyz, np.hstack((pzdd1(time_z), pzdd2(time_z), pzero(time_zero)))))
+      pyx     = np.hstack((pxdd(time_nzero), pzero(time_zero))) 
+      pyy     = np.hstack((pydd(time_nzero), pzero(time_zero)))
+      pytheta = np.hstack((ptdd(time_nzero), pzero(time_zero)))
+      pyz     = np.hstack((pzdd1(time_z), pzdd2(time_z), pzero(time_zero)))
+      
+      for idx in xrange(x.shape[0]-2):
+         #build polynomials
+         pxdd_temp    = np.polyint(np.poly1d([(-12.0/(ss**3))*(x[idx+2] - x[idx]), (6.0/(ss**2))*(x[idx+2] - x[idx])]))
+         #y case
+         pydd_temp    = np.polyint(np.poly1d([(-12.0/(ss**3))*(y[idx+2] - y[idx]), (6.0/(ss**2))*(y[idx+2] - y[idx])]))
+         #theta case
+         ptdd_temp    = np.polyint(np.poly1d([(-12.0/(ss**3))*(theta[idx+2] - theta[idx]), (6.0/(ss**2))*(theta[idx+2] - theta[idx])]))
+         #z case
+         pzdd1_temp   = np.polyint(np.poly1d([(-12.0/((ss/2)**3))*(h_step - 0.0), (6.0/((ss/2)**2))*(h_step - 0.0)]))
+         pzdd2_temp   = np.polyint(np.poly1d([(-12.0/((ss/2)**3))*(0.0 - h_step), (6.0/((ss/2)**2))*(0.0 - h_step)]))
+         #evaluate polynomials
+         pyx     = np.vstack((pyx, np.hstack((pxdd_temp(time_nzero), pzero(time_zero))))) 
+         pyy     = np.vstack((pyy, np.hstack((pydd_temp(time_nzero), pzero(time_zero)))))
+         pytheta = np.vstack((pytheta, np.hstack((ptdd_temp(time_nzero), pzero(time_zero)))))
+         pyz     = np.vstack((pyz, np.hstack((pzdd1_temp(time_z), pzdd2_temp(time_z), pzero(time_zero)))))
+
+   if(use_vel == False):
+      #first step handling
+      #build polynomials
+      pxdd  = np.poly1d([(-12.0/(ss**3))*(x[1] - x[0]), (6.0/(ss**2))*(x[1] - x[0])])
+      #y case
+      pydd  = np.poly1d([(-12.0/(ss**3))*(y[1] - y[1]), (6.0/(ss**2))*(y[1] - y[1])])
+      #theta case
+      ptdd  = np.poly1d([(-12.0/(ss**3))*(theta[1] - theta[0]), (6.0/(ss**2))*(theta[1] - theta[0])])
+      #z case
+      pzdd1 = np.poly1d([(-12.0/((ss/2)**3))*(h_step - 0.0), (6.0/((ss/2)**2))*(h_step - 0.0)])
+      pzdd2 = np.poly1d([(-12.0/((ss/2)**3))*(0.0 - h_step), (6.0/((ss/2)**2))*(0.0 - h_step)])
+
+      #evaluate polynomials
+      pyx     = np.hstack((pxdd(time_nzero), pzero(time_zero))) 
+      pyy     = np.hstack((pydd(time_nzero), pzero(time_zero)))
+      pytheta = np.hstack((ptdd(time_nzero), pzero(time_zero)))
+      pyz     = np.hstack((pzdd1(time_z), pzdd2(time_z), pzero(time_zero)))
+      
+      for idx in xrange(x.shape[0]-2):
+         #build polynomials
+         pxdd    = np.poly1d([(-12.0/(ss**3))*(x[idx+2] - x[idx]), (6.0/(ss**2))*(x[idx+2] - x[idx])])
+         #y case
+         pydd    = np.poly1d([(-12.0/(ss**3))*(y[idx+2] - y[idx]), (6.0/(ss**2))*(y[idx+2] - y[idx])])
+         #theta case
+         ptdd    = np.poly1d([(-12.0/(ss**3))*(theta[idx+2] - theta[idx]), (6.0/(ss**2))*(theta[idx+2] - theta[idx])])
+         #z case
+         pzdd1   = np.poly1d([(-12.0/((ss/2)**3))*(h_step - 0.0), (6.0/((ss/2)**2))*(h_step - 0.0)])
+         pzdd2   = np.poly1d([(-12.0/((ss/2)**3))*(0.0 - h_step), (6.0/((ss/2)**2))*(0.0 - h_step)])
+         #evaluate polynomials
+         pyx     = np.vstack((pyx, np.hstack((pxdd(time_nzero), pzero(time_zero))))) 
+         pyy     = np.vstack((pyy, np.hstack((pydd(time_nzero), pzero(time_zero)))))
+         pytheta = np.vstack((pytheta, np.hstack((ptdd(time_nzero), pzero(time_zero)))))
+         pyz     = np.vstack((pyz, np.hstack((pzdd1(time_z), pzdd2(time_z), pzero(time_zero)))))
+
+
+   # pyx = np.around(pyx,5)
+   # pyy = np.around(pyy,5)
+   # pyz = np.around(pyz,5)
+   # pytheta = np.around(pytheta,5)
 
    if save:
       #save stuff for whole body motion
-      np.savetxt('fx.txt', pyx.ravel(), delimiter=' ')
-      np.savetxt('fy.txt', pyy.ravel(), delimiter=' ')
-      np.savetxt('fz.txt', pyz.ravel(), delimiter=' ')
-      np.savetxt('ftheta.txt', pytheta.ravel(), delimiter=' ')   
-      np.savetxt('xcom.txt', state[:pyx.ravel().shape[0], 2], delimiter=' ')
-      np.savetxt('ycom.txt', state[:pyx.ravel().shape[0], 5], delimiter=' ')
-      np.savetxt('thetacom.txt', state[:pyx.ravel().shape[0], 8], delimiter=' ')
+      np.savetxt('fx.txt', pyx.ravel(), fmt='%f', delimiter=',')
+      np.savetxt('fy.txt', pyy.ravel(), fmt='%f', delimiter=',')
+      np.savetxt('fz.txt', pyz.ravel(), fmt='%f', delimiter=',')
+      np.savetxt('ftheta.txt', pytheta.ravel(), fmt='%f', delimiter=',')   
+      np.savetxt('xcom.txt', state[:pyx.ravel().shape[0], 2], fmt='%f', delimiter=',')
+      np.savetxt('ycom.txt', state[:pyx.ravel().shape[0], 5], fmt='%f', delimiter=',')
+      np.savetxt('thetacom.txt', state[:pyx.ravel().shape[0], 8], fmt='%f', delimiter=',')
+      np.savetxt('merge.txt', np.column_stack((np.around(pyx.ravel(),5), np.around(pyy.ravel(),5))), fmt='%f', delimiter=',')
 
    return [pyx, pyy, pyz, pytheta]
 

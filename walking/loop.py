@@ -23,9 +23,9 @@ def main():
    t_step       = 0.8
    future_steps = 2
    #robot constants
-   h_CoM        = 0.75
+   h_CoM        = 0.78
    foot_length  = 0.144
-   foot_width   = 0.04
+   foot_width   = 0.05
    h_step       = 0.07
    feet         = [foot_length, foot_width]
 
@@ -34,7 +34,7 @@ def main():
    model = python.system_model.SystemModel(h_CoM)
 
    #build the time vector
-   time_sim = 10.0
+   time_sim = 5.0
    time     = np.arange(0, time_sim, dt)
    ntime    = time.size
 
@@ -43,7 +43,7 @@ def main():
 
    #generate the reference speeds
    vref_x     = 0.1*np.ones((ntime, 1))
-   vref_y     = 0.0*np.ones((ntime, 1))
+   vref_y     = 0.1*np.ones((ntime, 1))
    vref_theta = 0.0*np.ones((ntime, 1))
    vref       = np.hstack((vref_x, vref_y, vref_theta))
 
@@ -71,7 +71,9 @@ def main():
    st, cop, tms, tm, cstr = python.plotting.subsample(feet, model, states, controls, current_foots, time_sim, dt, 0.005)
 
    #generate trajectories for tracking
-   pyx, pyy, pyz, pytheta = python.plotting.generate_trajectories(st, current_foots, h_step, 0.005)
+   # For velocity set vel_accl=True
+   # For acceleration set vel_accl=False
+   pyx, pyy, pyz, pytheta = python.plotting.generate_trajectories(st, current_foots, h_step, 0.005, vel_accl=True)
 
    #plots
    fig, ax = plt.subplots(1)
@@ -112,6 +114,9 @@ def main():
    plt.plot(np.linspace(0, time_sim, pytheta.size), pytheta.ravel(), 'g')
 
    plt.show()
+
+   print time
+   print len(time)
 
 if __name__ == '__main__':
 
