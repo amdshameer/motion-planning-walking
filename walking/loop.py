@@ -16,6 +16,11 @@ import python.system_model
 import python.mpc
 import python.plotting
 
+np.set_printoptions(suppress=True)
+
+foot_l = []
+foot_r = []
+
 def main():
 
    #simulation constants
@@ -34,7 +39,7 @@ def main():
    model = python.system_model.SystemModel(h_CoM)
 
    #build the time vector
-   time_sim = 5.0
+   time_sim = 0.8
    time     = np.arange(0, time_sim, dt)
    ntime    = time.size
 
@@ -43,7 +48,7 @@ def main():
 
    #generate the reference speeds
    vref_x     = 0.1*np.ones((ntime, 1))
-   vref_y     = 0.1*np.ones((ntime, 1))
+   vref_y     = 0.0*np.ones((ntime, 1))
    vref_theta = 0.0*np.ones((ntime, 1))
    vref       = np.hstack((vref_x, vref_y, vref_theta))
 
@@ -73,18 +78,23 @@ def main():
    #generate trajectories for tracking
    # For velocity set vel_accl=True
    # For acceleration set vel_accl=False
-   pyx, pyy, pyz, pytheta = python.plotting.generate_trajectories(st, current_foots, h_step, 0.005, vel_accl=True)
+   pyx, pyy, pyz, pytheta, total_time, total_time_zero = python.plotting.generate_trajectories(st, current_foots, h_step, 0.005, time_sim=time_sim, vel_accl=True)
 
    #plots
    fig, ax = plt.subplots(1)
    plt.title('walking pattern - CoP in the restricted zone')
    ax.set_xlabel('x [m]')
    ax.set_ylabel('y [m]')
-   plt.axis('equal')
+   #plt.axis('equal')
+   plt.xlim(-0.2,1.2)
+   plt.xticks(np.arange(-0.2, 1.2, 0.05))
+   plt.ylim(-0.3,0.3)
 
    for foot in current_foots:
 
       plt.plot(foot[0], foot[1], 'bo')
+      foot_l.append(foot[0])
+      foot_r.append(foot[1])
 
       #plot rotated feet
       rectangle = patches.Rectangle((foot[0]-foot_length/2, foot[1]-foot_width/2), foot_length, foot_width, color="red", fill=False)
@@ -100,23 +110,28 @@ def main():
       ax.add_patch(square)
 
    #plot CoM and CoP
-   plt.plot(cop[0, :], cop[1, :], 'g')
-   plt.plot(st[:, 0], st[:, 3], 'b')
+   # plt.plot(cop[0, :], cop[1, :], 'g')
+   # plt.plot(st[:, 0], st[:, 3], 'b')
+   plt.plot(foot_l, foot_r, 'y', linestyle=' ', marker='o')
    
    #plot time evolution of feet trajectory coords
-   fig2, ax2 = plt.subplots(1)
-   plt.title('feet and CoM acceleration')
-   ax2.set_ylabel('accel [m/s^2]')
-   ax2.set_xlabel('time [s]')
-   plt.axis('equal')
-   #4.8s is the time needed for exactly six steps - use instead of time_sim
-   plt.plot(np.linspace(0, time_sim, pyz.size), pyz.ravel(), 'r')
-   plt.plot(np.linspace(0, time_sim, pytheta.size), pytheta.ravel(), 'g')
+   plot_velo = 0
+   if(plot_velo):
+      fig2, ax2 = plt.subplots(1)
+      plt.title('feet and CoM acceleration')
+      ax2.set_ylabel('accel [m/s^2]')
+      ax2.set_xlabel('time [s]')
+      #plt.axis('equal')
+      plt.xlim(0,10)
+      plt.xticks(np.arange(0, 10, 0.8))
+      #plt.xlim(0,5)
+      #4.8s is the time needed for exactly six steps - use instead of time_sim
+      plt.plot(np.linspace(0, time_sim, pyz.size), pyz.ravel(), 'r')
+      plt.plot(np.linspace(0, time_sim, pytheta.size), pytheta.ravel(), 'b')
 
    plt.show()
-
-   print time
-   print len(time)
+   np.savetxt('CoM_traj_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005), st[:-1, 0], st[:-1, 3])), fmt='%f', delimiter=',')
+   np.savetxt('foot_traj_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005), cop[0,:-1], cop[1,:-1])), fmt='%f', delimiter=',')
 
 if __name__ == '__main__':
 

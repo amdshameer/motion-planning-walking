@@ -66,7 +66,7 @@ def subsample(feet, model, states, controls, current_foots, time_sim, olddt, new
    #return subsampled CoPs and states
    return [st, cop, tms, tm, constraints]
 
-def generate_trajectories(state, current_foots, h_step, dt, save=True, vel_accl=False):
+def generate_trajectories(state, current_foots, h_step, dt, time_sim, save=True, vel_accl=False):
    """      
       generate foot trajectories (x, y, z, theta - doubledots)
       for tracking with whole body controller
@@ -178,7 +178,8 @@ def generate_trajectories(state, current_foots, h_step, dt, save=True, vel_accl=
       np.savetxt('xcom.txt', state[:pyx.ravel().shape[0], 2], fmt='%f', delimiter=',')
       np.savetxt('ycom.txt', state[:pyx.ravel().shape[0], 5], fmt='%f', delimiter=',')
       np.savetxt('thetacom.txt', state[:pyx.ravel().shape[0], 8], fmt='%f', delimiter=',')
-      np.savetxt('merge.txt', np.column_stack((np.around(pyx.ravel(),5), np.around(pyy.ravel(),5))), fmt='%f', delimiter=',')
+      np.savetxt('foot_vel_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005), np.around(pyx.ravel(),5), np.around(pyy.ravel(),5))), fmt='%f', delimiter=',')
+      np.savetxt('CoM_vel_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005), np.around(state[:pyx.ravel().shape[0], 2],5), np.around(state[:pyx.ravel().shape[0], 5],5))), fmt='%f', delimiter=',')
 
-   return [pyx, pyy, pyz, pytheta]
+   return [pyx, pyy, pyz, pytheta, time_nzero, time_zero]
 
