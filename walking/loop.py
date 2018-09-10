@@ -49,7 +49,7 @@ def main():
 
    #generate the reference speeds
    vref_x     = 0.1*np.ones((ntime, 1))
-   vref_y     = -0.1*np.ones((ntime, 1))
+   vref_y     = 0.0*np.ones((ntime, 1))
    vref_theta = 0.0*np.ones((ntime, 1))
    vref       = np.hstack((vref_x, vref_y, vref_theta))
 
@@ -118,11 +118,11 @@ def main():
       plt.plot(foot_l, foot_r, 'y', linestyle=' ', marker='o')
    
    #plot time evolution of feet trajectory coords
-   plot_velo = 0
+   plot_velo = 1
    if (plot_velo):
       fig2, ax2 = plt.subplots(1)
-      plt.title('feet and CoM acceleration')
-      ax2.set_ylabel('accel [m/s^2]')
+      plt.title('feet and CoM velocity')
+      ax2.set_ylabel('velocity [m/s]')
       ax2.set_xlabel('time [s]')
       #plt.axis('equal')
       plt.xlim(0,10)
