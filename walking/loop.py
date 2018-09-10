@@ -31,7 +31,7 @@ def main():
    h_CoM        = 0.78
    foot_length  = 0.144
    foot_width   = 0.05
-   h_step       = 0.07
+   h_step       = 0.05
    feet         = [foot_length, foot_width]
 
    #instantiate the linear system model
@@ -39,7 +39,8 @@ def main():
    model = python.system_model.SystemModel(h_CoM)
 
    #build the time vector
-   time_sim = 0.8
+   # time_sim should be multiples of 0.8s
+   time_sim = 8.0
    time     = np.arange(0, time_sim, dt)
    ntime    = time.size
 
@@ -48,7 +49,7 @@ def main():
 
    #generate the reference speeds
    vref_x     = 0.1*np.ones((ntime, 1))
-   vref_y     = 0.0*np.ones((ntime, 1))
+   vref_y     = -0.1*np.ones((ntime, 1))
    vref_theta = 0.0*np.ones((ntime, 1))
    vref       = np.hstack((vref_x, vref_y, vref_theta))
 
@@ -78,45 +79,47 @@ def main():
    #generate trajectories for tracking
    # For velocity set vel_accl=True
    # For acceleration set vel_accl=False
-   pyx, pyy, pyz, pytheta, total_time, total_time_zero = python.plotting.generate_trajectories(st, current_foots, h_step, 0.005, time_sim=time_sim, vel_accl=True)
+   pyx, pyy, pyz, pytheta, total_time, total_time_zero, foot_x_coord, foot_y_coord, foot_x_val, foot_y_val = python.plotting.generate_trajectories(st, current_foots, h_step, 0.005, time_sim=time_sim, vel_accl=True)
 
    #plots
    fig, ax = plt.subplots(1)
    plt.title('walking pattern - CoP in the restricted zone')
    ax.set_xlabel('x [m]')
    ax.set_ylabel('y [m]')
-   #plt.axis('equal')
-   plt.xlim(-0.2,1.2)
-   plt.xticks(np.arange(-0.2, 1.2, 0.05))
-   plt.ylim(-0.3,0.3)
+   plt.axis('equal')
+   # plt.xlim(-0.2,1.2)
+   # plt.xticks(np.arange(-0.2, 1.2, 0.05))
+   # plt.ylim(-0.3,0.3)
 
-   for foot in current_foots:
+   plot_foot = 1
+   if (plot_foot):
+      for foot in current_foots:
 
-      plt.plot(foot[0], foot[1], 'bo')
-      foot_l.append(foot[0])
-      foot_r.append(foot[1])
+         plt.plot(foot[0], foot[1], 'bo')
+         foot_l.append(foot[0])
+         foot_r.append(foot[1])
 
-      #plot rotated feet
-      rectangle = patches.Rectangle((foot[0]-foot_length/2, foot[1]-foot_width/2), foot_length, foot_width, color="red", fill=False)
-      transform = matplotlib.transforms.Affine2D().rotate_around(foot[0], foot[1], foot[2]) + ax.transData
-      rectangle.set_transform(transform)
-      ax.add_patch(rectangle)
+         #plot rotated feet
+         rectangle = patches.Rectangle((foot[0]-foot_length/2, foot[1]-foot_width/2), foot_length, foot_width, color="red", fill=False)
+         transform = matplotlib.transforms.Affine2D().rotate_around(foot[0], foot[1], foot[2]) + ax.transData
+         rectangle.set_transform(transform)
+         ax.add_patch(rectangle)
 
-      #plot restriction zones
-      circle = plt.Circle((foot[0], foot[1]), 2*mpc.zone*np.sqrt(2)/2, color='b', fill=False)
-      ax.add_patch(circle)
-      
-      square = patches.Rectangle((foot[0] - mpc.zone, foot[1] - mpc.zone), 2*mpc.zone, 2*mpc.zone, color='y', fill=False)
-      ax.add_patch(square)
+         #plot restriction zones
+         circle = plt.Circle((foot[0], foot[1]), 2*mpc.zone*np.sqrt(2)/2, color='b', fill=False)
+         ax.add_patch(circle)
+         
+         square = patches.Rectangle((foot[0] - mpc.zone, foot[1] - mpc.zone), 2*mpc.zone, 2*mpc.zone, color='y', fill=False)
+         ax.add_patch(square)
 
-   #plot CoM and CoP
-   # plt.plot(cop[0, :], cop[1, :], 'g')
-   # plt.plot(st[:, 0], st[:, 3], 'b')
-   plt.plot(foot_l, foot_r, 'y', linestyle=' ', marker='o')
+      #plot CoM and CoP
+      plt.plot(cop[0, :], cop[1, :], 'g')
+      plt.plot(st[:, 0], st[:, 3], 'b')
+      plt.plot(foot_l, foot_r, 'y', linestyle=' ', marker='o')
    
    #plot time evolution of feet trajectory coords
    plot_velo = 0
-   if(plot_velo):
+   if (plot_velo):
       fig2, ax2 = plt.subplots(1)
       plt.title('feet and CoM acceleration')
       ax2.set_ylabel('accel [m/s^2]')
@@ -129,9 +132,11 @@ def main():
       plt.plot(np.linspace(0, time_sim, pyz.size), pyz.ravel(), 'r')
       plt.plot(np.linspace(0, time_sim, pytheta.size), pytheta.ravel(), 'b')
 
-   plt.show()
    np.savetxt('CoM_traj_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005), st[:-1, 0], st[:-1, 3])), fmt='%f', delimiter=',')
    np.savetxt('foot_traj_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005), cop[0,:-1], cop[1,:-1])), fmt='%f', delimiter=',')
+   np.savetxt('foot_traj.txt', np.column_stack((np.arange(0, time_sim, 0.005), foot_x_val.ravel(), foot_y_val.ravel())), fmt='%f', delimiter=',')
+
+   plt.show()
 
 if __name__ == '__main__':
 

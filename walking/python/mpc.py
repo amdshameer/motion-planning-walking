@@ -4,6 +4,7 @@ np.set_printoptions(threshold=np.nan)
 from scipy.linalg import block_diag
 from qpoases import PyQProblem as QProblem
 from qpoases import PyOptions as Options
+from qpoases import PyPrintLevel as PrintLevel
 
 class MPC(object):
    """MPC base class
@@ -337,6 +338,7 @@ class RestrictedZoneMPC(MPC):
 
       #solver options - MPC
       myOptions = Options()
+      myOptions.printLevel = PrintLevel.NONE
       myOptions.setToMPC()
       self.QP.setOptions(myOptions)
 

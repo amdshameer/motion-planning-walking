@@ -78,17 +78,21 @@ def generate_trajectories(state, current_foots, h_step, dt, time_sim, save=True,
    ss  = 0.7
    tds = 0.1
 
+   x_coord = []
+   y_coord = []
    #collect values from feet coords
    x     = current_foots[::8, 0]
    y     = current_foots[::8, 1]
    theta = current_foots[::8, 2]
+   x_coord.append(x)
+   y_coord.append(y)
    
    #build time vector for x, y, z, theta
    time_nzero = np.linspace(0, ss, ss/dt)
    time_zero  = np.linspace(0, tds, tds/dt)
    time_z     = np.linspace(0, ss/2, (ss/2)/dt)
    pzero      = np.poly1d([0])
-
+   
    use_vel = vel_accl
    if(use_vel == True):
       #first step handling
@@ -112,6 +116,12 @@ def generate_trajectories(state, current_foots, h_step, dt, time_sim, save=True,
       pyy     = np.hstack((pydd(time_nzero), pzero(time_zero)))
       pytheta = np.hstack((ptdd(time_nzero), pzero(time_zero)))
       pyz     = np.hstack((pzdd1(time_z), pzdd2(time_z), pzero(time_zero)))
+
+      foot_x = np.polyint(pxdd)
+      foot_y = np.polyint(pydd)
+
+      foot_x_val = np.hstack((foot_x(time_nzero), pzero(time_zero))) 
+      foot_y_val = np.hstack((foot_y(time_nzero), pzero(time_zero)))
       
       for idx in xrange(x.shape[0]-2):
          #build polynomials
@@ -123,11 +133,16 @@ def generate_trajectories(state, current_foots, h_step, dt, time_sim, save=True,
          #z case
          pzdd1_temp   = np.polyint(np.poly1d([(-12.0/((ss/2)**3))*(h_step - 0.0), (6.0/((ss/2)**2))*(h_step - 0.0)]))
          pzdd2_temp   = np.polyint(np.poly1d([(-12.0/((ss/2)**3))*(0.0 - h_step), (6.0/((ss/2)**2))*(0.0 - h_step)]))
+
+         foot_x_temp = np.polyint(np.polyint(np.poly1d([(-12.0/(ss**3))*(x[idx+2] - x[idx]), (6.0/(ss**2))*(x[idx+2] - x[idx])])))
+         foot_y_temp = np.polyint(np.polyint(np.poly1d([(-12.0/(ss**3))*(y[idx+2] - y[idx]), (6.0/(ss**2))*(y[idx+2] - y[idx])])))
          #evaluate polynomials
          pyx     = np.vstack((pyx, np.hstack((pxdd_temp(time_nzero), pzero(time_zero))))) 
          pyy     = np.vstack((pyy, np.hstack((pydd_temp(time_nzero), pzero(time_zero)))))
          pytheta = np.vstack((pytheta, np.hstack((ptdd_temp(time_nzero), pzero(time_zero)))))
          pyz     = np.vstack((pyz, np.hstack((pzdd1_temp(time_z), pzdd2_temp(time_z), pzero(time_zero)))))
+         foot_x_val     = np.vstack((foot_x_val, np.hstack((foot_x_temp(time_nzero), pzero(time_zero))))) 
+         foot_y_val     = np.vstack((foot_y_val, np.hstack((foot_y_temp(time_nzero), pzero(time_zero)))))
 
    if(use_vel == False):
       #first step handling
@@ -181,5 +196,5 @@ def generate_trajectories(state, current_foots, h_step, dt, time_sim, save=True,
       np.savetxt('foot_vel_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005), np.around(pyx.ravel(),5), np.around(pyy.ravel(),5))), fmt='%f', delimiter=',')
       np.savetxt('CoM_vel_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005), np.around(state[:pyx.ravel().shape[0], 2],5), np.around(state[:pyx.ravel().shape[0], 5],5))), fmt='%f', delimiter=',')
 
-   return [pyx, pyy, pyz, pytheta, time_nzero, time_zero]
+   return [pyx, pyy, pyz, pytheta, time_nzero, time_zero, x_coord, y_coord, foot_x_val, foot_y_val]
 
