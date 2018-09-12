@@ -78,14 +78,10 @@ def generate_trajectories(state, current_foots, h_step, dt, time_sim, save=True,
    ss  = 0.7
    tds = 0.1
 
-   x_coord = []
-   y_coord = []
    #collect values from feet coords
    x     = current_foots[::8, 0]
    y     = current_foots[::8, 1]
    theta = current_foots[::8, 2]
-   x_coord.append(x)
-   y_coord.append(y)
    
    #build time vector for x, y, z, theta
    time_nzero = np.linspace(0, ss, ss/dt)
@@ -196,5 +192,5 @@ def generate_trajectories(state, current_foots, h_step, dt, time_sim, save=True,
       np.savetxt('foot_vel_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005), np.around(pyx.ravel(),5), np.around(pyy.ravel(),5))), fmt='%f', delimiter=',')
       np.savetxt('CoM_vel_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005), np.around(state[:pyx.ravel().shape[0], 2],5), np.around(state[:pyx.ravel().shape[0], 5],5))), fmt='%f', delimiter=',')
 
-   return [pyx, pyy, pyz, pytheta, time_nzero, time_zero, x_coord, y_coord, foot_x_val, foot_y_val]
+   return [pyx, pyy, pyz, pytheta, time_nzero, time_zero, foot_x_val, foot_y_val]
 

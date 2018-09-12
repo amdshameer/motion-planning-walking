@@ -28,7 +28,7 @@ def main():
    t_step       = 0.8
    future_steps = 2
    #robot constants
-   h_CoM        = 0.78
+   h_CoM        = 0.78 # 0.75
    foot_length  = 0.144
    foot_width   = 0.05
    h_step       = 0.05
@@ -79,7 +79,7 @@ def main():
    #generate trajectories for tracking
    # For velocity set vel_accl=True
    # For acceleration set vel_accl=False
-   pyx, pyy, pyz, pytheta, total_time, total_time_zero, foot_x_coord, foot_y_coord, foot_x_val, foot_y_val = python.plotting.generate_trajectories(st, current_foots, h_step, 0.005, time_sim=time_sim, vel_accl=True)
+   pyx, pyy, pyz, pytheta, total_time, total_time_zero, foot_x_val, foot_y_val = python.plotting.generate_trajectories(st, current_foots, h_step, 0.005, time_sim=time_sim, vel_accl=True)
 
    #plots
    fig, ax = plt.subplots(1)
