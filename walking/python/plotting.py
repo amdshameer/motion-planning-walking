@@ -82,7 +82,7 @@ def generate_trajectories(state, current_foots, h_step, dt, time_sim, save=True,
    x     = current_foots[::8, 0]
    y     = current_foots[::8, 1]
    theta = current_foots[::8, 2]
-   
+
    #build time vector for x, y, z, theta
    time_nzero = np.linspace(0, ss, ss/dt)
    time_zero  = np.linspace(0, tds, tds/dt)
@@ -137,6 +137,8 @@ def generate_trajectories(state, current_foots, h_step, dt, time_sim, save=True,
          pyy     = np.vstack((pyy, np.hstack((pydd_temp(time_nzero), pzero(time_zero)))))
          pytheta = np.vstack((pytheta, np.hstack((ptdd_temp(time_nzero), pzero(time_zero)))))
          pyz     = np.vstack((pyz, np.hstack((pzdd1_temp(time_z), pzdd2_temp(time_z), pzero(time_zero)))))
+
+         # Foot trajectory
          foot_x_val     = np.vstack((foot_x_val, np.hstack((foot_x_temp(time_nzero), pzero(time_zero))))) 
          foot_y_val     = np.vstack((foot_y_val, np.hstack((foot_y_temp(time_nzero), pzero(time_zero)))))
 
@@ -173,12 +175,6 @@ def generate_trajectories(state, current_foots, h_step, dt, time_sim, save=True,
          pyy     = np.vstack((pyy, np.hstack((pydd(time_nzero), pzero(time_zero)))))
          pytheta = np.vstack((pytheta, np.hstack((ptdd(time_nzero), pzero(time_zero)))))
          pyz     = np.vstack((pyz, np.hstack((pzdd1(time_z), pzdd2(time_z), pzero(time_zero)))))
-
-
-   # pyx = np.around(pyx,5)
-   # pyy = np.around(pyy,5)
-   # pyz = np.around(pyz,5)
-   # pytheta = np.around(pytheta,5)
 
    if save:
       #save stuff for whole body motion

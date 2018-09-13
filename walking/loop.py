@@ -94,8 +94,6 @@ def main():
    plot_foot = 1
    if (plot_foot):
       for foot in current_foots:
-
-         plt.plot(foot[0], foot[1], 'bo')
          foot_l.append(foot[0])
          foot_r.append(foot[1])
 
@@ -115,10 +113,10 @@ def main():
       #plot CoM and CoP
       plt.plot(cop[0, :], cop[1, :], 'g')
       plt.plot(st[:, 0], st[:, 3], 'b')
-      plt.plot(foot_l, foot_r, 'y', linestyle=' ', marker='o')
+      plt.plot(foot_l, foot_r, 'black', linestyle=' ', marker='+')
    
    #plot time evolution of feet trajectory coords
-   plot_velo = 1
+   plot_velo = 0
    if (plot_velo):
       fig2, ax2 = plt.subplots(1)
       plt.title('feet and CoM velocity')
@@ -133,10 +131,16 @@ def main():
       plt.plot(np.linspace(0, time_sim, pytheta.size), pytheta.ravel(), 'b')
 
    np.savetxt('CoM_traj_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005), st[:-1, 0], st[:-1, 3])), fmt='%f', delimiter=',')
-   np.savetxt('foot_traj_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005), cop[0,:-1], cop[1,:-1])), fmt='%f', delimiter=',')
-   np.savetxt('foot_traj.txt', np.column_stack((np.arange(0, time_sim, 0.005), foot_x_val.ravel(), foot_y_val.ravel())), fmt='%f', delimiter=',')
+   np.savetxt('foot_traj_x_y.txt', np.column_stack((np.arange(0, time_sim, 0.005),foot_x_val.ravel(), foot_y_val.ravel())), fmt='%f', delimiter=',')
+   np.savetxt('foot_l_r.txt', np.column_stack((np.arange(0, len(foot_l)),foot_l, foot_r)), fmt='%f', delimiter=',')
+   np.savetxt('current_foots.txt', np.column_stack((np.arange(0, len(current_foots[::8, 0].tolist())),current_foots[::8, 0].tolist(), current_foots[::8, 1].tolist())), fmt='%f', delimiter=',')
 
+
+   plt.plot(foot_l, foot_r, 'black', linestyle=' ', marker='+')
    plt.show()
+
+   print len(foot_l)
+   print len(current_foots[::8, 0].tolist())
 
 if __name__ == '__main__':
 
