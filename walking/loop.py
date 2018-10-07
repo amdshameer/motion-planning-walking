@@ -49,7 +49,7 @@ def main():
 
    #generate the reference speeds
    vref_x     = 0.1*np.ones((ntime, 1))
-   vref_y     = 0.0*np.ones((ntime, 1))
+   vref_y     = 0.1*np.ones((ntime, 1))
    vref_theta = 0.0*np.ones((ntime, 1))
    vref       = np.hstack((vref_x, vref_y, vref_theta))
 
