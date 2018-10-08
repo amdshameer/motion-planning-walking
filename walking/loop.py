@@ -2,6 +2,7 @@
 
 import sys
 import os
+from my_py_utils import interpolate_from_file
 
 path = os.path.abspath(os.path.join(os.path.abspath(
        os.path.join(os.path.dirname(__file__), "..")), "python"))
@@ -20,6 +21,21 @@ np.set_printoptions(suppress=True)
 
 foot_l = []
 foot_r = []
+
+def interpolate(x1, y1, x2, y2):
+   x_val = []
+   y_val = []
+   n = 140
+   for i in range(1, n):
+       a = float(i) / n             # rescale 0 < i < n --> 0 < a < 1
+       x = (1 - a) * x1 + a * x2    # interpolate x coordinate
+       y = (1 - a) * y1 + a * y2    # interpolate y coordinate
+       x_val.append(x)
+       y_val.append(y)
+   x_val.append(x2)
+   y_val.append(y2)
+
+   return x_val, y_val
 
 def main():
 
@@ -135,8 +151,19 @@ def main():
    np.savetxt('foot_l_r.txt', np.column_stack((np.arange(0, len(foot_l)),foot_l, foot_r)), fmt='%f', delimiter=',')
    np.savetxt('current_foots.txt', np.column_stack((np.arange(0, len(current_foots[::8, 0].tolist())),current_foots[::8, 0].tolist(), current_foots[::8, 1].tolist())), fmt='%f', delimiter=',')
 
+   lx,ly, rx, ry = interpolate_from_file('current_foots.txt')
+   plt.plot(lx , ly, linestyle=' ', marker='*')
+   plt.plot(rx , ry, linestyle=' ', marker='*')
 
-   plt.plot(foot_l, foot_r, 'black', linestyle=' ', marker='+')
+   #plt.plot(foot_x_val, foot_y_val, 'black', linestyle=' ', marker='o')
+
+   # nx, ny = interpolate(0.000000,0.000000, 0.167721,0.023352)
+   # plt.plot(nx , ny, linestyle=' ', marker='*')
+   # nx, ny = interpolate(0.090670,-0.156900, 0.247138,-0.133547)
+   # plt.plot(nx , ny, linestyle=' ', marker='*')
+   # nx, ny = interpolate(0.167721,0.023352, 0.326030,0.046042)
+   # plt.plot(nx , ny, linestyle=' ', marker='*')
+
    plt.show()
 
    print len(foot_l)
